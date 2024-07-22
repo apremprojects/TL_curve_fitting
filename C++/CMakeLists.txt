@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.8.2)
+project(differential_evolution_test)
+#find_package (Eigen3 3.3 REQUIRED NO_MODULE)
+add_executable(differential_evolution_test ./src/main.cpp ./src/CPPDifferentialEvolution.cpp ./src/CDifferentialEvolution.cpp ./include/DifferentialEvolution.h ./include/csv.h ./include/CPPDifferentialEvolution.h ./include/CDifferentialEvolution.h ./include/progressbar.hpp)
+#target_link_libraries(differential_evolution_test ./DifferentialEvolution.h)
