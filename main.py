@@ -9,7 +9,8 @@ from solver import Solver
 from model import Model
 from cpp_differential_evolution import lib, ffi
 from progress_bar import ProgressBar
-
+import time
+import csv
 
 def minimums_maxes(initial_parameters):
     Es = []
@@ -26,6 +27,39 @@ def minimums_maxes(initial_parameters):
         Ns.append(initial_parameters[i])
     return ([min(Es), min(Ss), min(n0s), min(Ns)], [max(Es), max(Ss), max(n0s), max(Ns)])
 
+def write_to_file(filename, peaks, x_data, input_y_data, peak_y_datas, fitted_y_data, answer, initial_guess, residual, fom):
+    #Format: E, S, n0, N, x_data, input_y_data, fitted_y_data, residual, fom, residual
+    with open(filename, 'w') as f:
+        csv_writer = csv.DictWriter(f, fieldnames=["E_fitted", "s_fitted", "N_fitted", "n0_fitted", "E_initial", "s_initial", "N_initial", "n0_initial", "temp_K", "int_peak1", "int_peak2", "int_peak3", "int_peak4", "int_peak5", "int_peak6", "int_peak7", "int_peak8", "int_peak9", "int_sum", "temp_data_K", "int_data_cps"])
+        csv_writer.writeheader()
+        for i in range(0, peaks):
+            row = {
+                "E_fitted": answer[4*i],
+                "s_fitted": answer[4*i + 1],
+                "n0_fitted": answer[4*i + 2],
+                "N_fitted": answer[4*i + 3],
+                "E_initial": initial_guess[4*i],
+                "s_initial": initial_guess[4*i + 1],
+                "n0_initial": initial_guess[4*i + 2],
+                "N_initial": initial_guess[4*i + 3],
+                "temp_K": x_data[i],
+                "int_sum": fitted_y_data[i],
+                "temp_data_K": x_data[i],
+                "int_data_cps": input_y_data[i]
+            }
+            for j in range(0, peaks):
+                row[f"int_peak{j+1}"] = peak_y_datas[j][i]
+            csv_writer.writerow(row)
+        for i in range(peaks, x_data.size):
+            row = {
+                "temp_K": x_data[i],
+                "int_sum": fitted_y_data[i],
+                "temp_data_K": x_data[i],
+                "int_data_cps": input_y_data[i]
+            }
+            for j in range(0, peaks):
+                row[f"int_peak{j+1}"] = peak_y_datas[j][i]
+            csv_writer.writerow(row)
 
 def generate_bounds(N, Eb, Sb, n0b, Nb):
     res = []
@@ -133,6 +167,9 @@ if __name__ == "__main__":
 
     parser.add_argument('--absolute_sigma', action='store_true')
     parser.add_argument('--verbose', action='store_true') #enables disp = True
+
+    parser.add_argument('--output', type = str, default = None)
+    parser.add_argument('--beta', type = float, default = None)
     args = parser.parse_args()
     print(args)
 
@@ -140,23 +177,33 @@ if __name__ == "__main__":
         if(len(args.initial_guess) != args.peaks * 4):
             print(args.initial_guess)
             raise RuntimeError(f"{args.peaks*4} parameters for initial_guess expected, {len(args.initial_guess)} provided")
+        
+    #Process bounds
     if(len(args.bounds) == 1):
-        #tbd process tbd process file
+        #Read bounds from .csv
         arr = np.loadtxt(args.bounds[0], delimiter=",", skiprows=1, max_rows=args.peaks).flatten()
-        print(arr)
-        #exit(1)
+
+        #store in bounds
         bounds = []
+        cpp_bounds = []
         for i in range(0, arr.size, 2):
             bounds.append([arr[i], arr[i+1]])
+            cpp_bounds.append(arr[i])
+            cpp_bounds.append(arr[i+1])
 
+        #get lower bounds and higher bounds for curve_bounds
         lowest = []
         highest = []
         for i in range(0, arr.size, 2):
             lowest.append(arr[i])
             highest.append(arr[i+1])
+        
+        #store in curve_bounds
         curve_bounds = [lowest, highest]
-        print(bounds, curve_bounds)
+
     elif(len(args.bounds) == 8):
+
+        #store bounds based on command line arguments
         bounds = generate_bounds(
             N = args.peaks,
             Eb = [args.bounds[0], args.bounds[1]],
@@ -183,51 +230,47 @@ if __name__ == "__main__":
     else:
         raise RuntimeError("Not enough bounds/no filename provided")
 
-    """
-    bounds = (
-        (0.5,0.75), (1e14,3.47e14), (0, 5.46e5), (0, 5.46e5),
-        (0.75,1.00), (1e14,6.69e14), (0, 3.46e5), (0, 3.46e5),    
-        (1.00,1.35), (1e16,1.9e16), (0, 5.85e5), (0, 5.85e5),   
-        (1.35,1.45), (1e13,5.24e13), (0, 2.82e5), (0, 2.82e5),
-        (1.45,1.55), (1e11,9.8e11), (0, 2.27e6), (0, 2.27e6)  
-    )
+    #Read data from input .csv file
+    x_data = []
+    y_data = []
+    with open(args.filename) as file:
+        csv_reader = csv.DictReader(file)
+        for row in csv_reader:
+            #print(row)
+            row = dict(row)
+            if "temp_c" in row:
+                #print("Celsius")
+                x_data.append(float(row["temp_c"]) + 273.15)
+            elif "temp_C" in row:
+                #print("Celsius")
+                x_data.append(float(row["temp_C"]) + 273.15)
+            elif "temp_k" in row:
+                #print("Kelvin")
+                x_data.append(float(row["temp_k"]))
+            elif "temp_K" in row:
+                #print("Kelvin")
+                x_data.append(float(row["temp_K"]))
+            else:
+                raise RuntimeError(f"Incorrect .csv file format, expected temp_c/temp_k, intensity_cps, got {row.keys()}")
+            y_data.append(float(row["intensity_cps"]))
+    x_data = np.array(x_data)
+    y_data = np.array(y_data)
+    #print(x_data, y_data)
+    #exit(1)
 
-    curve_bounds = (
-        (
-            0, 0, 0, 0,
-            0, 0, 0, 0,    
-            0, 0, 0, 0,   
-            0, 0, 0, 0,
-            0, 0, 0, 0
-        ), 
-        (
-            0.75, 3.47e14, 5.46e5, 5.46e5,
-            1.00, 6.69e14, 3.46e5, 3.46e5,    
-            1.35, 1.9e16, 5.85e5, 5.85e5,   
-            1.45, 5.24e13, 2.82e5, 2.82e5,
-            1.55, 9.8e11, 2.27e6, 2.27e6
-        )  
-    )
-    """
-    
-    #print(curve_bounds)
-
-    arr = np.transpose(np.loadtxt(args.filename, delimiter=",", skiprows=1))
-    x_data = arr[0]# + (np.ones(arr[0].size) * 273.15)
-    #above code is for files in kelvin, uncomment if in celcius
-    y_data = arr[1]
-    #print(x_data)
-
+    #Create Plotter class to plot data
     print("Creating plotter...")
     plotter = Plotter()
 
+    #Create Model class to model curves
     print("Creating model...")
     model = Model(
         #N = 1E5,    # Total concentration of traps
-        beta = 2.0,    # Heating rate
+        beta = 2.0 if args.beta == None else args.beta,    # Heating rate
         k_J_per_K = 1.381e-23  # Boltzmann constant in J/K
     )
 
+    #Create Solver class to fit data
     print("Creating solver...")
     solver = Solver(
         model = model,
@@ -235,33 +278,31 @@ if __name__ == "__main__":
         y_data = y_data
     )
 
+    #Constraint ensures that n0 is less than N
     constraints = NonlinearConstraint(fun = solver.n0_N_constraint, lb = 0, ub = 1)
     
+    #Clip initial_guess to fit within bounds
     initial_guess = args.initial_guess
-    #rand = np.random.randint(low=50, high=150, size=(len(initial_guess),)) / 100.0
     if(initial_guess!=None):
-        for i in range(0, len(initial_guess)):
-            #initial_guess[i] *= rand[i]
-            pass
-            #initial_guess[i + 2]/=initial_guess[i + 3]
         initial_guess = np.clip(initial_guess, curve_bounds[0], curve_bounds[1])
 
+    #Switch between different types of Global Solver
     if(args.basinhopping):
         pass
-        #to be implemented
+        #Basin Hopping Differential Evolution
     elif(args.brute):
+        #Brute Global Solver
         if(args.vectorized):
             raise RuntimeError("Vectorization cannot be used with brute...")
         print("The program does not support displaying a progress bar for this solver...")
-        #print(bounds, args.ns, args.workers)
         initial_parameters = solver.brute_force(
             bounds = bounds,
             workers = args.workers,
             Ns = args.ns,
             disp = True
         )
-        #print(initial_parameters)
     elif(args.dual_annealing):
+        #Dual Annealing Global Solver
         print("Generating initial parameters with dual_annealing...")
         if(args.workers != 1 or args.vectorized):
             raise RuntimeError("Vectorization and/or Parallelization cannot be used with dual_annealing...")
@@ -281,6 +322,7 @@ if __name__ == "__main__":
             x0 = initial_guess
         )
     elif(args.cppdifferential_evolution):
+        #C++ Differential Evolution Global Solver
         print("Generating initial parameters with cpp_differential_evolution...")
         if(args.workers != 1 or args.vectorized):
             raise RuntimeError("Vectorization and/or Parallelization cannot be used with cpp_differential_evolution...")
@@ -288,12 +330,14 @@ if __name__ == "__main__":
         y_buf = ffi.new("double[]", y_data.tolist())
         cpp_buf = ffi.new("double[]", cpp_bounds)
         res = lib.solve(args.verbose, args.peaks, 1000 if args.maxiter == None else args.maxiter, args.atol, args.tol, args.popsize, cpp_buf, x_buf, y_buf, len(x_data))
-        initial_parameters = np.zeros(args.peaks * 3)
-        for i in range(0, args.peaks * 3):
+        print("HERE\n")
+        initial_parameters = np.zeros(args.peaks * 4)
+        for i in range(0, args.peaks * 4):
             initial_parameters[i] = ffi.cast("double", res[i + 1])
-        for i in range(0, initial_parameters.size, 3):
-            print(initial_parameters[i], initial_parameters[i+1], initial_parameters[i+2])
+        for i in range(0, initial_parameters.size, 4):
+            print(initial_parameters[i], initial_parameters[i+1], initial_parameters[i+2], initial_parameters[i+3])
     elif(args.differential_evolution):
+        #Differential Evolution Global Solver
         print("Generating initial parameters with differential_evolution...")
         if(args.workers != 1 and args.vectorized):
             raise RuntimeError("Vectorization and Parallelization cannot be used at the same time...")
@@ -318,6 +362,7 @@ if __name__ == "__main__":
             constraints = constraints
         )
     elif(args.direct):
+        #DIRECT Global Solver
         print("Generating initial parameters with DIRECT...")
         if(args.workers != 1):
             raise RuntimeError("DIRECT doesn't support parallelism")
@@ -339,6 +384,7 @@ if __name__ == "__main__":
             callback=pbar.update_xk
         )
     elif(args.shgo):
+        #SHGO Global Solver
         if(args.initial_guess != None):
             print("This solver doesn't support initial guesses...")
         print("Generating initial parameters with SHGO...")
@@ -377,18 +423,16 @@ if __name__ == "__main__":
         )
         pbar.close()
     else:
+        #No Global Solver
         if(args.initial_guess!=None):
             print("Moving directly to curve_fit...")
             initial_parameters = args.initial_guess
         else:
             raise RuntimeError("Specify a curve-fitting method")
 
+    #Local Curve Fit Solver
     print("Fitting curve with initial parameters...")
-
-    #print(curve_bounds)
     initial_parameters = np.clip(initial_parameters, curve_bounds[0], curve_bounds[1])
-    print(initial_parameters)
-    print(curve_bounds)
     answer = solver.curve_fit(
         initial_guess = initial_parameters,
         bounds = curve_bounds,
@@ -396,13 +440,17 @@ if __name__ == "__main__":
         sigma = args.sigma,
         absolute_sigma = args.absolute_sigma
     )
-    #answer = initial_parameters
-    print("init guess -> ", initial_parameters)
-    print("Answer -> ", answer)
-    #print("Min [E, S, nf], Max [E, s, nf] -> ", minimums_maxes(initial_parameters))
+    print("Initial parameters (generated by Global Solver) -> ", initial_parameters)
+    print("Answer (generated by (locally) curve fitting from Initial parameters) -> ", answer)
 
-    
-    #plotter used to be instantiated here 7/7/24
+
+    #calculate residuals and figure of merit
+    residual = model.residual(answer, x_data, y_data)
+    fom = model.figure_of_merit(answer, x_data, y_data)
+    initial_parameters_y_data = model.evaluate(x_data, *initial_parameters)
+    fitted_y_data = model.evaluate(x_data, *answer)
+
+    #plot data
     print("Plotting...")
     plotter.plot(
         x_data = x_data,
@@ -410,29 +458,38 @@ if __name__ == "__main__":
         alpha = 1,
         label = 'Real data curve'
     )
-
     plotter.plot(
         x_data = x_data, 
-        y_data = model.evaluate(x_data, *initial_parameters),
+        y_data = initial_parameters_y_data,
         alpha = 0.2,
         label = 'Initial data curve'
     )
-
     plotter.plot(
         x_data = x_data,
-        y_data = model.evaluate(x_data, *answer),
+        y_data = fitted_y_data,
         alpha = 1,
         label = 'Fitted data curve'
     )
+    peak_y_datas = []
     for i in range(0, int(answer.size / 4)):
         print(answer[i * 4: (i + 1) * 4])
+        peak_y_datas.append(model.evaluate(x_data, *(answer[i * 4: (i + 1) * 4])))
         plotter.fill_between(
             x = x_data,
-            y1 = model.evaluate(x_data, *(answer[i * 4: (i + 1) * 4])),
+            y1 = peak_y_datas[len(peak_y_datas)-1],
             alpha = 0.1,
             label = f"Peak #{i+1}"
         )
-    print("Residual -> ", model.residual(initial_parameters, x_data, y_data))
+    
+    #print residual & figure of merit
+    print(f"Residual -> {residual}")
+    print(f"FOM -> {fom}%")
+    
+    #write to file
+    if(args.output!=None):
+        write_to_file(args.output, args.peaks, x_data, y_data, peak_y_datas, fitted_y_data, answer, initial_parameters, residual, fom)
+    
+    #display plot
     plt.xlabel('Temperature, $T$ [K]')
     plt.ylabel('Intensity, $I$ [cps]')
     plt.legend(fontsize=7, loc='best')

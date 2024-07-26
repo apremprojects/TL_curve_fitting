@@ -3,7 +3,6 @@
  * \author Milos Stojanovic Stojke (milsto)
  *
  * Implementation of Differential evolution algorithm.
- * https://github.com/milsto/differential-evolution
  */
 
 #pragma once
@@ -78,12 +77,12 @@ namespace de
          * \param callback Optional callback to be called after each optimization iteration has finished.
          * Optimization iteration is defined as processing of single population with SelectionAndCorssing method.
          */
-        DifferentialEvolution(  const IOptimizable& costFunction,
-                                unsigned int populationSize,
-                                int randomSeed = 123,
-                                bool shouldCheckConstraints = true,
-                                std::function<void(const DifferentialEvolution&)> callback = nullptr,
-                                std::function<bool(const DifferentialEvolution&)> terminationCondition = nullptr) :
+        DifferentialEvolution(const IOptimizable& costFunction,
+            unsigned int populationSize,
+            int randomSeed = 123,
+            bool shouldCheckConstraints = true,
+            std::function<void(const DifferentialEvolution&)> callback = nullptr,
+            std::function<bool(const DifferentialEvolution&)> terminationCondition = nullptr) :
             m_cost(costFunction),
             m_populationSize(populationSize),
             m_F(0.8),
@@ -169,7 +168,7 @@ namespace de
 
                 // Form intermediate solution z
                 std::vector<double> z(m_numberOfParameters);
-                for (int i = 0; i < m_numberOfParameters; i ++)
+                for (int i = 0; i < m_numberOfParameters; i++)
                 {
                     z[i] = m_population[a][i] + m_F * (m_population[b][i] - m_population[c][i]);
                 }
@@ -280,7 +279,7 @@ namespace de
                     std::cout << "Best agent: ";
                     for (int i = 0; i < m_numberOfParameters; i++)
                     {
-                        std::cout<< m_population[m_bestAgentIndex][i] << " ";
+                        std::cout << m_population[m_bestAgentIndex][i] << " ";
                     }
                     std::cout << std::endl;
                 }

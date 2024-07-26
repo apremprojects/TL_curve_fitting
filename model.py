@@ -38,6 +38,15 @@ class Model:
                 return np.inf
         res = self.evaluate(T, *x)
         return np.sum((intensity_values - res)**2)
+    def figure_of_merit(self, x, T, intensity_values):
+        #print("Res ->", x)
+        for i in range(0, x.size, 4):
+            if(x[i+2] > x[i+3]):
+                return np.inf
+        res = self.evaluate(T, *x)
+        residual = np.sum(abs(intensity_values - res))
+        sum = np.sum(res)
+        return 100.0 * residual / sum
     def std_dev(self, x, T, intensity_values):
         #print("Res ->", x)
         res = self.evaluate(T, *x)
