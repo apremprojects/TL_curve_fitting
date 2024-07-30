@@ -73,7 +73,16 @@ def generate_bounds(N, Eb, Sb, n0b, Nb):
 
 
 def generate_cpp_bounds(N, Eb, Sb, n0b, Nb):
-    res = [Eb[0], Eb[1], Sb[0], Sb[1], n0b[0], n0b[1], Nb[0], Nb[1]]
+    res = []
+    for i in range(0, N):
+        res.append(Eb[0])
+        res.append(Eb[1])
+        res.append(Sb[0])
+        res.append(Sb[1])
+        res.append(n0b[0])
+        res.append(n0b[1])
+        res.append(Nb[0])
+        res.append(Nb[1])
     return res
 
 
@@ -222,26 +231,26 @@ if __name__ == "__main__":
         #store bounds based on command line arguments
         bounds = generate_bounds(
             N = args.peaks,
-            Eb = [args.bounds[0], args.bounds[1]],
-            Sb = [args.bounds[2], args.bounds[3]],
-            n0b = [args.bounds[4], args.bounds[5]],
-            Nb = [args.bounds[6], args.bounds[7]]
+            Eb = [float(args.bounds[0]), float(args.bounds[1])],
+            Sb = [float(args.bounds[2]), float(args.bounds[3])],
+            n0b = [float(args.bounds[4]), float(args.bounds[5])],
+            Nb = [float(args.bounds[6]), float(args.bounds[7])]
         )
 
         curve_bounds = generate_curve_bounds(
             N = args.peaks,
-            Eb = (args.bounds[0], args.bounds[1]),
-            Sb = (args.bounds[2], args.bounds[3]),
-            n0b = (args.bounds[4], args.bounds[5]),
-            Nb = (args.bounds[6], args.bounds[7])
+            Eb = [float(args.bounds[0]), float(args.bounds[1])],
+            Sb = [float(args.bounds[2]), float(args.bounds[3])],
+            n0b = [float(args.bounds[4]), float(args.bounds[5])],
+            Nb = [float(args.bounds[6]), float(args.bounds[7])]
         )
 
         cpp_bounds = generate_cpp_bounds(
             N = args.peaks,
-            Eb = (args.bounds[0], args.bounds[1]),
-            Sb = (args.bounds[2], args.bounds[3]),
-            n0b = (args.bounds[4], args.bounds[5]),
-            Nb = (args.bounds[6], args.bounds[7])
+            Eb = [float(args.bounds[0]), float(args.bounds[1])],
+            Sb = [float(args.bounds[2]), float(args.bounds[3])],
+            n0b = [float(args.bounds[4]), float(args.bounds[5])],
+            Nb = [float(args.bounds[6]), float(args.bounds[7])]
         )
     else:
         raise RuntimeError("Not enough bounds/no filename provided")
