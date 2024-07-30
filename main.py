@@ -9,8 +9,9 @@ from solver import Solver
 from model import Model
 from cpp_differential_evolution import lib, ffi
 from progress_bar import ProgressBar
-import time
 import csv
+from rich.console import Console
+from rich.markdown import Markdown
 
 def minimums_maxes(initial_parameters):
     Es = []
@@ -98,9 +99,8 @@ def generate_curve_bounds(N, Eb, Sb, n0b, Nb):
 if __name__ == "__main__":
     #python main.py three_peak.csv --shgo --bounds 0.07 3 1e8 1e11 1 10 --peaks 3 --maxfev 3000 --f_min 0 --verbose --workers 2
     parser = argparse.ArgumentParser(
-        prog='ProgramName',
-        description='What the program does',
-        epilog='Text at the bottom of help'
+        prog='TL_curve_fitting',
+        add_help=False
     )
     parser.add_argument('filename')           # positional argument
 
@@ -159,8 +159,8 @@ if __name__ == "__main__":
     parser.add_argument('--vol_tol', type = float, default = 1e-16)
     parser.add_argument('--len_tol', type = float, default = 1e-6)
 
-    parser.add_argument('--peaks', required = True, type = int)
-    parser.add_argument('--bounds', nargs = '*', required = True, type = str)
+    parser.add_argument('--peaks', type = int)
+    parser.add_argument('--bounds', nargs = '*', type = str)
     parser.add_argument('--workers', type = int, default = 1)
     parser.add_argument('--sigma', type = float, default = None)
     parser.add_argument('--curve_ftol', type = float, default = 0.001)
@@ -170,8 +170,24 @@ if __name__ == "__main__":
 
     parser.add_argument('--output', type = str, default = None)
     parser.add_argument('--beta', type = float, default = None)
+    parser.add_argument('-h', '--help', action='store_true')
     args = parser.parse_args()
-    print(args)
+    #print(args)
+
+    if(args.bounds == None or args.peaks == None):
+        if(args.help):
+            pass
+            with open("USAGE.md", 'r') as f:
+                console = Console()
+                console.print(Markdown(f.read()))
+                exit(1)
+        else:
+            if(args.peaks == None and args.bounds == None):
+                raise RuntimeError("the following arguments are required: --peaks, --bounds")
+            elif(args.peaks == None):
+                raise RuntimeError("the following arguments are required: --peaks")
+            elif(args.bounds == None):
+                raise RuntimeError("the following arguments are required: --bounds")
 
     if(args.initial_guess != None):
         if(len(args.initial_guess) != args.peaks * 4):
@@ -329,13 +345,11 @@ if __name__ == "__main__":
         x_buf = ffi.new("double[]", x_data.tolist())
         y_buf = ffi.new("double[]", y_data.tolist())
         cpp_buf = ffi.new("double[]", cpp_bounds)
-        res = lib.solve(args.verbose, args.peaks, 1000 if args.maxiter == None else args.maxiter, args.atol, args.tol, args.popsize, cpp_buf, x_buf, y_buf, len(x_data))
-        print("HERE\n")
+        res = lib.solve(args.verbose, args.peaks, 1000 if args.maxiter == None else args.maxiter, 2.0 if args.beta == None else args.beta, args.atol, args.tol, args.popsize, cpp_buf, x_buf, y_buf, len(x_data))
+        #print("HERE\n")
         initial_parameters = np.zeros(args.peaks * 4)
         for i in range(0, args.peaks * 4):
             initial_parameters[i] = ffi.cast("double", res[i + 1])
-        for i in range(0, initial_parameters.size, 4):
-            print(initial_parameters[i], initial_parameters[i+1], initial_parameters[i+2], initial_parameters[i+3])
     elif(args.differential_evolution):
         #Differential Evolution Global Solver
         print("Generating initial parameters with differential_evolution...")

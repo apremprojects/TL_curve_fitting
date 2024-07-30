@@ -1,4 +1,3 @@
-from numba import njit
 from scipy.optimize import curve_fit, differential_evolution, brute, direct, shgo, dual_annealing
 import numpy as np
 import pandas as pd

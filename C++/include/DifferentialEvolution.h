@@ -265,15 +265,19 @@ namespace de
         void Optimize(int iterations, bool verbose = true)
         {
             InitPopulation();
+            //std::cout << "POPINIT\n";
 
             // Optimization loop
             for (int i = 0; i < iterations; i++)
             {
                 // Optimization step
+                //std::cout << "psc\n";
                 SelectionAndCorssing();
+                //std::cout << "sc\n";
 
                 if (verbose)
                 {
+                    //std::cout << "v\n";
                     std::cout << std::fixed << std::setprecision(5);
                     std::cout << "Current minimal cost: " << m_minCost << "\t\t";
                     std::cout << "Best agent: ";
@@ -286,11 +290,13 @@ namespace de
 
                 if (m_callback)
                 {
+                    //std::cout << "m_c\n";
                     m_callback(*this);
                 }
 
                 if (m_terminationCondition)
                 {
+                    //std::cout << "m_tC\n";
                     if (m_terminationCondition(*this))
                     {
                         if (verbose)
@@ -304,6 +310,7 @@ namespace de
 
             if (verbose)
             {
+                //std::cout << "vbr\n";
                 std::cout << "Terminated due to exceeding total number of generations." << std::endl;
             }
         }

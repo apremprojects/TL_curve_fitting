@@ -35,6 +35,6 @@ int main(){
 
     //de.Optimize(1000, false);
     //std::cout << "ANSWER -> " << de.GetBestCost() << "\n";
-    std::cout << "ANS2 -> " << solve(true, 8, 3000, 0.0, 1.0, 15, bounds.data(), x_data.data(), y_data.data(), x_data.size())[0] << "\n";
+    std::cout << "ANS2 -> " << solve(true, 8, 3000, 7.5, 0.0, 0.2, 15, bounds.data(), x_data.data(), y_data.data(), x_data.size())[0] << "\n";
     //test(bounds.data(), 0);
 }

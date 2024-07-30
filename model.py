@@ -18,13 +18,14 @@ class Model:
         for i in range(0, len(args), 4):
             E_ev = args[i]
             S = args[i + 1]
-            #nf = args[i + 2]
             n0 = args[i+2]
             N = args[i + 3]
-            #N = 1e5
-            #n0 = N*nf
             E_J = E_ev * (1.602e-19)
+            if(n0 > N):
+                n0 = N
+
             T0_antiderivative = self.antiderivative(T[0], E_J)
+
             for j in range(0, T.size):
                 integral_result = self.antiderivative(T[j], E_J) - T0_antiderivative
                 numerator = n0**2 * S * np.exp(-E_J / (self.k_J_per_K * T[j]))

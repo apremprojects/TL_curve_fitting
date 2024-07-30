@@ -51,10 +51,10 @@ std::vector<de::IOptimizable::Constraints> Model::GetConstraints() const {
         constr[i + 2] = Constraints(bounds[2*i+4], bounds[2 * i + 5], true);
         constr[i + 3] = Constraints(bounds[2*i+6], bounds[2*i+7], true);
     }
-    std::cout << "BEGIN\n";
+    /*std::cout << "BEGIN\n";
     for (auto i : constr) {
        std::cout << i.lower << ", " << i.upper << "\n";
-    }
+    }*/
     return constr;
 }
 
