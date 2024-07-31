@@ -1,5 +1,7 @@
 <a href="#installation">Installation</a>
+
 <a href="#tl_def">What is thermoluminescence?</a>
+
 <a href="#usage">Usage</a>
 
 <p id = "installation">Requirements:</p>
