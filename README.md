@@ -30,9 +30,9 @@ Instructions:
 
 
 
-<p id = "tl_def">What is thermoluminescence?</p>
+<h1 id = "tl_def">Thermoluminescence Definition</h1>
 
-
+What is thermoluminescence?
 
 * Ionizing radiation excites and traps electrons into higher energy levels (E).
 * Heat provides necessary activation energy (E<sub>a</sub>) for electrons to fall back to their ground state
@@ -79,7 +79,9 @@ _TL of lunar mare and highland material investigated through Apollo 17 samples (
 
 ![alt_text](assets/image4.png "image_tooltip")
 
-<p id = "usage"> Usage: main.py [-h] [--initial_guess [INITIAL_GUESS ...]] [--basinhopping] [--brute] [--ns NS] [--cppdifferential_evolution] [--differential_evolution] </p>
+<h1 id = "usage">Usage</h1>
+
+Usage: main.py [-h] [--initial_guess [INITIAL_GUESS ...]] [--basinhopping] [--brute] [--ns NS] [--cppdifferential_evolution] [--differential_evolution]
 
                    [--strategy STRATEGY] [--popsize POPSIZE] [--tol TOL] [--mutation MUTATION MUTATION] [--recombination RECOMBINATION] [--polish]
 
