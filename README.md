@@ -1,9 +1,10 @@
-<ol>
-    <li><a href="#installation">Installation</a></li>
-    <li><a href="#tl_def">What is thermoluminescence?</a></li>
-    <li><a href="#usage">Usage</a></li>
-</ol>
-
+<td>
+    <ol>
+        <li><a href="#installation">Installation</a></li>
+        <li><a href="#tl_def">What is thermoluminescence?</a></li>
+        <li><a href="#usage">Usage</a></li>
+    </ol>
+</td>
 <h1 id = "installation">Installation</h1>
 
 Requirements:
