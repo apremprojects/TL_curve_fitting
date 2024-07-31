@@ -6,7 +6,7 @@
 
 <p id = "installation">Requirements:</p>
 
-
+<h1 id = "installation">Installation</h1>
 
 * Python 3.11.9 (or other compatible version)r
 
