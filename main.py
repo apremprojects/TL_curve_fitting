@@ -12,6 +12,7 @@ from progress_bar import ProgressBar
 import csv
 from rich.console import Console
 from rich.markdown import Markdown
+import string
 
 def minimums_maxes(initial_parameters):
     Es = []
@@ -260,21 +261,16 @@ if __name__ == "__main__":
     y_data = []
     with open(args.filename) as file:
         csv_reader = csv.DictReader(file)
+        printable = set(string.printable)
         for row in csv_reader:
-            #print(row)
             row = dict(row)
+            row = {''.join(filter(lambda x: x in printable, k.lower())): v for k, v in row.items()}
             if "temp_c" in row:
                 #print("Celsius")
                 x_data.append(float(row["temp_c"]) + 273.15)
-            elif "temp_C" in row:
-                #print("Celsius")
-                x_data.append(float(row["temp_C"]) + 273.15)
             elif "temp_k" in row:
                 #print("Kelvin")
                 x_data.append(float(row["temp_k"]))
-            elif "temp_K" in row:
-                #print("Kelvin")
-                x_data.append(float(row["temp_K"]))
             else:
                 raise RuntimeError(f"Incorrect .csv file format, expected temp_c/temp_k, intensity_cps, got {row.keys()}")
             y_data.append(float(row["intensity_cps"]))
