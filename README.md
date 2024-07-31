@@ -1,12 +1,12 @@
-<a href="#installation">Installation</a>
-
-<a href="#tl_def">What is thermoluminescence?</a>
-
-<a href="#usage">Usage</a>
-
-<p id = "installation">Requirements:</p>
+<ol>
+    <li><a href="#installation">Installation</a></li>
+    <li><a href="#tl_def">What is thermoluminescence?</a></li>
+    <li><a href="#usage">Usage</a></li>
+</ol>
 
 <h1 id = "installation">Installation</h1>
+
+Requirements:
 
 * Python 3.11.9 (or other compatible version)r
 
