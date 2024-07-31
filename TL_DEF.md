@@ -61,5 +61,3 @@ _TL of lunar mare and highland material investigated through Apollo 17 samples (
 
 
 
-
-<!-- watermark --><div style="background-color:#FFFFFF"><p style="color:#FFFFFF; font-size: 1px">gd2md-html: xyzzy Wed Jul 31 2024</p></div>
